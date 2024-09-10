@@ -126,6 +126,53 @@ class TestDefaultClient:
         )
         get_client_mock.return_value.pipeline.return_value.execute.assert_called_once()
 
+    def test_client_set_expire_when_key_has_existing_expiration(self, cache_client):
+        # using DEFAULT_TIMEOUT -> 5 min
+        cache_client.set(key="test_key", value="some_val")
+        results = cache_client.expire(key="test_key", timeout=1000, xx=True)
+        assert results == True
+
+    def test_client_set_expire_when_key_has_no_expiration(self, cache_client):
+        cache_client.set(key="test_key", value="some_val", timeout=None)
+        results = cache_client.expire(key="test_key", timeout=1000, nx=True)
+        assert results == True
+
+    @pytest.mark.parametrize(
+            ["expire_time", "expected_output"],
+            [
+                ("90000",True),
+                ("150", False)
+            ]
+            )
+    def test_client_set_expire_only_when_new_expire_is_greater_than_existant_expiration(
+        self,
+        cache_client,
+        expire_time,
+        expected_output
+    ):
+        # using DEFAULT_TIMEOUT -> 5 min
+        cache_client.set(key="test_key", value="some_val")
+        results = cache_client.expire(key="test_key", timeout=expire_time, gt=True)
+        assert results == expected_output
+
+    @pytest.mark.parametrize(
+            ["expire_time", "expected_output"],
+            [
+                ("10",True),
+                ("99000", False)
+            ]
+            )
+    def test_client_set_expire_only_when_new_expire_is_lower_than_existant_expiration(
+        self,
+        cache_client,
+        expire_time,
+        expected_output
+    ):
+        # using DEFAULT_TIMEOUT -> 5 min
+        cache_client.set(key="test_key", value="some_val")
+        results = cache_client.expire(key="test_key", timeout=expire_time, lt=True)
+        assert results == expected_output
+
 
 class TestShardClient:
     @patch("test_client.DefaultClient.make_pattern")

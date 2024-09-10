@@ -317,6 +317,10 @@ class DefaultClient:
         timeout: ExpiryT,
         version: Optional[int] = None,
         client: Optional[Redis] = None,
+        nx = False,
+        xx = False,
+        gt = False,
+        lt = False,
     ) -> bool:
         if timeout is DEFAULT_TIMEOUT:
             timeout = self._backend.default_timeout  # type: ignore
@@ -328,7 +332,7 @@ class DefaultClient:
 
         # for some strange reason mypy complains,
         # saying that timeout type is float | timedelta
-        return client.expire(key, timeout)  # type: ignore
+        return client.expire(key, timeout, nx ,xx, gt, lt)  # type: ignore
 
     def pexpire(
         self,
